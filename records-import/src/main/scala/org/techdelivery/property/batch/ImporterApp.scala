@@ -8,8 +8,12 @@ import scala.io.Source
 import org.techdelivery.property.batch.domain.RecordParser
 import scala.io.Codec
 import org.techdelivery.property.batch.parser.csvParser
+import akka.actor.ActorSystem
+import akka.actor.Props
 
 object ImporterApp extends App {
+  
+  val system = ActorSystem("system")
 
   val defaultConf = ConfigFactory.load
   lazy val conf = ConfigFactory.load("mongo-app").withFallback(defaultConf)
@@ -18,11 +22,16 @@ object ImporterApp extends App {
   val connection = mongo.connection(conf.getStringList("mongo.servers").asScala.toSeq)
   val db = connection.db(conf.getString("mongo.database"))
   
-  override def main(args: Array[String]) = {
-    val lines = Source.fromFile(args(0))(Codec.ISO8859).getLines().drop(1)
+  val importer = system.actorOf(Props(new MongoImporter(db)))
+  
+  args.foreach { importRegistries(_)}
+  
+  
+  def importRegistries(file: String) = {
+    val lines = Source.fromFile(file)(Codec.ISO8859).getLines().drop(1)
     val records = lines.map(csvParser.parse(_)(0))
-    records.foreach {
-      println(_)
-    }
+    records.foreach { importer !  _ }
   }
+  
+  
 }
