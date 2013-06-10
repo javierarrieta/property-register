@@ -5,11 +5,10 @@ import reactivemongo.api.MongoDriver
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.io.Source
-import org.techdelivery.property.batch.domain.RecordParser
+import org.techdelivery.property.batch.domain.{RegistryRecord, RecordParser}
 import scala.io.Codec
 import org.techdelivery.property.batch.parser.csvParser
-import akka.actor.ActorSystem
-import akka.actor.Props
+import akka.actor.{PoisonPill, ActorSystem, Props}
 
 object ImporterApp extends App {
   
@@ -24,13 +23,14 @@ object ImporterApp extends App {
   
   val importer = system.actorOf(Props(new MongoImporter(db)))
   
-  args.foreach { importRegistries(_)}
-  
+  args.foreach { importRegistries(_) }
+
+  importer ! PoisonPill
   
   def importRegistries(file: String) = {
     val lines = Source.fromFile(file)(Codec.ISO8859).getLines().drop(1)
     val records = lines.map(csvParser.parse(_)(0))
-    records.foreach { importer !  _ }
+    records.foreach { importer !  RegistryRecord(_) }
   }
   
   

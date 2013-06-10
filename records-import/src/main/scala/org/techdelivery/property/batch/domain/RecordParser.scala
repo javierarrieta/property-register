@@ -18,7 +18,11 @@ object RecordParser {
 	
 	private def cleanLong( value: String): Long = Long.parseLong(value.replaceAll("[^\\d.]+", ""),10)
 	
-	private def cleanBoolean( value: String): Boolean = value.toBoolean
+	private def cleanBoolean( value: String): Boolean = value.toLowerCase match {
+    case "true" => true
+    case "yes"  => true
+    case _ => false
+  }
 	
 	private def cleanDate( value: String): Date = formatter.parse(value.replaceAll("\"", ""))
 }
