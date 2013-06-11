@@ -1,33 +1,22 @@
 package org.techdelivery.property.batch
 
-import com.typesafe.config.ConfigFactory
-import reactivemongo.api.MongoDriver
-import scala.collection.JavaConverters._
-import scala.concurrent.ExecutionContext.Implicits._
 import scala.io.Source
 import scala.io.Codec
 import org.techdelivery.property.batch.parser.csvParser
-import akka.actor.{PoisonPill, ActorSystem, Props}
+import akka.actor.{PoisonPill,Props}
 import org.techdelivery.property.entity.RegistryRecord
 import org.techdelivery.property.mongo.MongoImporter
+import org.techdelivery.property.mongo.propertyMongoDB._
 
 object ImporterApp extends App {
   
-  val system = ActorSystem("system")
-
-  val defaultConf = ConfigFactory.load
-  lazy val conf = ConfigFactory.load("mongo-app").withFallback(defaultConf)
+  val system = actorSystem
   
-  implicit val mongo = new MongoDriver
-  val connection = mongo.connection(conf.getStringList("mongo.servers").asScala.toSeq)
-  val db = connection.db(conf.getString("mongo.database"))
-  
-  val importer = system.actorOf(Props(new MongoImporter(db)))
+  val importer = system.actorOf(Props(new MongoImporter(propertyCollection)))
   
   args.foreach { importRegistries(_) }
 
-  importer ! PoisonPill
-  mongo.close()
+  system.shutdown()
   
   def importRegistries(file: String) = {
     val lines = Source.fromFile(file)(Codec.ISO8859).getLines().drop(1)

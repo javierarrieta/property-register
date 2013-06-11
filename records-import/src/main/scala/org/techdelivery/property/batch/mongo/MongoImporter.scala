@@ -1,18 +1,15 @@
 package org.techdelivery.property.mongo
 
 import akka.actor.{ActorLogging, Actor}
-import org.techdelivery.property.entity.{RecordMapper, RegistryRecord}
-import RecordMapper._
-import reactivemongo.api.DefaultDB
 import org.techdelivery.property.entity.RegistryRecord
+import org.techdelivery.property.entity.RecordMapper._
 import RegistryRecord._
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.util.Success
 import scala.util.Failure
+import reactivemongo.api.collections.default.BSONCollection
 
-class MongoImporter(db: DefaultDB) extends Actor with ActorLogging {
-
-  val collection = db.collection("property")
+class MongoImporter(collection: BSONCollection) extends Actor with ActorLogging {
   def receive = {
     case record: RegistryRecord => {
       val properRecord = cleanRecord(record)
