@@ -1,4 +1,4 @@
-package org.techdelivery.property.batch.domain
+package org.techdelivery.property.batch.parser
 
 import java.text.DateFormat
 import java.text.SimpleDateFormat
@@ -6,6 +6,7 @@ import scala.util.matching.Regex
 import java.lang.Long
 import scala.runtime.RichBoolean
 import java.util.Date
+import org.techdelivery.property.entity.RegistryRecord
 
 object RecordParser {
 	val formatter = new SimpleDateFormat("dd/MM/yyyy")

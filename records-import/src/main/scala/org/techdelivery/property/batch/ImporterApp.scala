@@ -5,10 +5,11 @@ import reactivemongo.api.MongoDriver
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.io.Source
-import org.techdelivery.property.batch.domain.{RegistryRecord, RecordParser}
 import scala.io.Codec
 import org.techdelivery.property.batch.parser.csvParser
 import akka.actor.{PoisonPill, ActorSystem, Props}
+import org.techdelivery.property.entity.RegistryRecord
+import org.techdelivery.property.mongo.MongoImporter
 
 object ImporterApp extends App {
   

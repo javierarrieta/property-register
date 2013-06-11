@@ -1,10 +1,11 @@
-package org.techdelivery.property.batch
+package org.techdelivery.property.mongo
 
 import akka.actor.{ActorLogging, Actor}
-import org.techdelivery.property.batch.domain.RecordMapper._
+import org.techdelivery.property.entity.{RecordMapper, RegistryRecord}
+import RecordMapper._
 import reactivemongo.api.DefaultDB
-import org.techdelivery.property.batch.domain.RegistryRecord
-import org.techdelivery.property.batch.domain.RegistryRecord._
+import org.techdelivery.property.entity.RegistryRecord
+import RegistryRecord._
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.util.Success
 import scala.util.Failure

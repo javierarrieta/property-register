@@ -1,4 +1,4 @@
-package org.techdelivery.property.batch.domain
+package org.techdelivery.property.entity
 
 import java.util.Date
 import reactivemongo.bson.BSONDocumentWriter

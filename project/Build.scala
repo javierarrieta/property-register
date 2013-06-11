@@ -17,6 +17,15 @@ object Build extends Build {
 
   lazy val root = Project("root",file("."))
     .settings(basicSettings: _*)
+    .aggregate(records_common, records_import)
+
+  lazy val records_common = Project("records-common", file("records-common"))
+    .settings(exampleSettings: _*)
+    .settings(libraryDependencies ++=
+    compile(rMongo) ++
+      test(specs2) ++
+      provided(logback)
+  )
 
   lazy val records_import = Project("records-import", file("records-import"))
     .settings(exampleSettings: _*)
@@ -25,5 +34,6 @@ object Build extends Build {
       test(specs2) ++
       provided(akkaSlf4j, logback)
     )
+    .dependsOn(records_common)
 
 }
