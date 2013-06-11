@@ -30,6 +30,17 @@ object RegistryRecord {
 
   def apply(fields:List[String]): RegistryRecord = new RegistryRecord(cleanDate(fields(0)), fields(1), fields(2), fields(3),
     cleanLong( fields(4) ), cleanBoolean(fields(5)), cleanBoolean(fields(6)), fields(7))
+
+  def cleanRecord(original: RegistryRecord) : RegistryRecord = {
+    val rx = "\\,\\ *(\\w*\\ \\d{1,2})$".r
+    rx.findFirstMatchIn(original.address) match {
+      case Some(pc) => original.postal_code match {
+        case "" => original.copy(postal_code = pc.group(1))
+        case _ => original
+      }
+      case None => original
+    }
+  }
 }
 object RecordMapper {
   implicit object MongoRecordMapper extends BSONDocumentWriter[RegistryRecord] {
