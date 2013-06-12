@@ -28,8 +28,8 @@ class PropertyResource(collection: BSONCollection) extends Actor {
           response onComplete {
             case Success(list) => {
               list match {
-                case record :: xs => origin ! HttpResponse( status = 200, entity = HttpBody(`application/json`,record.toJson.toString) )
-                case List() => origin ! HttpResponse( status = 404 )
+                case record :: Nil => origin ! HttpResponse( status = 200, entity = HttpBody(`application/json`,record.toJson.toString) )
+                case Nil => origin ! HttpResponse( status = 404 )
               }
             } 
             case Failure(f) => origin ! HttpResponse( status = 503, entity = f.getMessage)
