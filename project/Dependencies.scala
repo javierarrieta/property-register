@@ -40,4 +40,5 @@ object Dependencies {
   val pegdown       = "org.pegdown"                             %   "pegdown"                     % "1.2.1"
   val liftJson      = "net.liftweb"                             %%  "lift-json" 
   val rMongo        = "org.reactivemongo"                       %% "reactivemongo"                % "0.9"     // % "2.5-M4"
+  val time          = "org.scalaj"                              % "scalaj-time_2.9.1"             % "0.6"
 }

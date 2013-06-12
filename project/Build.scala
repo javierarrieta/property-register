@@ -17,12 +17,12 @@ object Build extends Build {
 
   lazy val root = Project("root",file("."))
     .settings(basicSettings: _*)
-    .aggregate(records_common, records_import)
+    .aggregate(records_common, records_import, records_rest)
 
   lazy val records_common = Project("records-common", file("records-common"))
     .settings(exampleSettings: _*)
     .settings(libraryDependencies ++=
-    compile(rMongo) ++
+    compile(rMongo, sprayJson, time) ++
       test(specs2) ++
       provided(logback)
   )
@@ -30,10 +30,18 @@ object Build extends Build {
   lazy val records_import = Project("records-import", file("records-import"))
     .settings(exampleSettings: _*)
     .settings(libraryDependencies ++=
-      compile(akkaActor, rMongo) ++
+      compile(akkaActor) ++
       test(specs2) ++
       provided(akkaSlf4j, logback)
     )
     .dependsOn(records_common)
 
+  lazy val records_rest = Project("records-rest", file("records-rest"))
+    .settings(exampleSettings: _*)
+    .settings(libraryDependencies ++=
+      compile(akkaActor, sprayCan, sprayRouting, sprayJson, logging) ++
+      test(specs2) ++
+      provided(akkaSlf4j, logback)
+    )
+    .dependsOn(records_common)
 }

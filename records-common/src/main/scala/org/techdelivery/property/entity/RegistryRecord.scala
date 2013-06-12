@@ -1,13 +1,16 @@
 package org.techdelivery.property.entity
 
 import java.util.Date
-import reactivemongo.bson.BSONDocumentWriter
-import reactivemongo.bson.BSONDocument
-import reactivemongo.bson.BSONDateTime
-import reactivemongo.bson.BSONString
+import reactivemongo.bson._
 import reactivemongo.bson.BSONLong
+import reactivemongo.bson.BSONDateTime
 import reactivemongo.bson.BSONBoolean
+import reactivemongo.bson.BSONString
+import scala.Some
+import spray.json._
+import DefaultJsonProtocol._
 import java.text.SimpleDateFormat
+import org.joda.time.format.ISODateTimeFormat
 
 case class RegistryRecord(sale_date: Date, address: String, postal_code: String, county: String, price: Long,
 					full_market_price: Boolean, vat_exclusive: Boolean, description: String)
@@ -43,17 +46,56 @@ object RegistryRecord {
   }
 }
 object RecordMapper {
-  implicit object MongoRecordMapper extends BSONDocumentWriter[RegistryRecord] {
+  implicit object RecordMapper extends BSONDocumentWriter[RegistryRecord] {
   
-	  def write(registry: RegistryRecord) : BSONDocument = BSONDocument(
-	    "sale_date" -> BSONDateTime(registry.sale_date.getTime()),
-	    "address" -> BSONString(registry.address),
-	    "postal_code" -> BSONString(registry.postal_code),
-	    "county" -> BSONString(registry.county),
-	    "price" -> BSONLong(registry.price),
-	    "full_market_price" -> BSONBoolean(registry.full_market_price),
-	    "vat_exclusive" -> BSONBoolean(registry.vat_exclusive),
-	    "description" -> BSONString(registry.description)
+	  def write(record: RegistryRecord) : BSONDocument = BSONDocument(
+	    "sale_date" -> BSONDateTime(record.sale_date.getTime()),
+	    "address" -> BSONString(record.address),
+	    "postal_code" -> BSONString(record.postal_code),
+	    "county" -> BSONString(record.county),
+	    "price" -> BSONLong(record.price),
+	    "full_market_price" -> BSONBoolean(record.full_market_price),
+	    "vat_exclusive" -> BSONBoolean(record.vat_exclusive),
+	    "description" -> BSONString(record.description)
 	  )
   }
+  implicit object MongoRecordMapper extends BSONDocumentWriter[MongoRegistryRecord] with BSONDocumentReader[MongoRegistryRecord] {
+
+	  def write(record: MongoRegistryRecord) : BSONDocument = BSONDocument(
+      "_id" -> BSONObjectID(record.id),
+	    "sale_date" -> BSONDateTime(record.sale_date.getTime()),
+	    "address" -> BSONString(record.address),
+	    "postal_code" -> BSONString(record.postal_code),
+	    "county" -> BSONString(record.county),
+	    "price" -> BSONLong(record.price),
+	    "full_market_price" -> BSONBoolean(record.full_market_price),
+	    "vat_exclusive" -> BSONBoolean(record.vat_exclusive),
+	    "description" -> BSONString(record.description)
+	  )
+
+    def read(doc: BSONDocument) : MongoRegistryRecord = new MongoRegistryRecord(
+	    doc.getAs[BSONObjectID]("_id").get.stringify,
+      new Date(doc.getAs[BSONDateTime]("sale_date").map(_.value).get),
+      doc.getAs[BSONString]("address").map(_.value).get,
+      doc.getAs[BSONString]("postal_code").map(_.value).get,
+      doc.getAs[BSONString]("county").map(_.value).get,
+      doc.getAs[BSONLong]("price").map(_.value).get,
+      doc.getAs[BSONBoolean]("full_market_price").map(_.value).get,
+      doc.getAs[BSONBoolean]("vat_exclusive").map(_.value).get,
+      doc.getAs[BSONString]("description").map(_.value).get
+    )
+  }
+
+  object RegistryRecordProtocol extends DefaultJsonProtocol {
+    val format = ISODateTimeFormat.dateTime()
+    implicit object DateJsonFormat extends JsonFormat[Date] {
+      def write(d:Date) = JsString(format.print(d.getTime))
+      def read(value: JsValue) = value match {
+        case JsString(s) => format.parseDateTime(s).toDate
+        case _ => throw new DeserializationException("Date Expected")
+      }
+    }
+    implicit val recordFormat = jsonFormat9(MongoRegistryRecord)
+  }
+
 }
