@@ -26,7 +26,12 @@ class PropertyResource(collection: BSONCollection) extends Actor {
           val result = collection.find(filter).cursor[MongoRegistryRecord]
           val response = result.toList
           response onComplete {
-            case Success(list) => origin ! HttpResponse( status = 200, entity = HttpBody(`application/json`,list(0).toJson.toString) )
+            case Success(list) => {
+              list match {
+                case record :: xs => origin ! HttpResponse( status = 200, entity = HttpBody(`application/json`,record.toJson.toString) )
+                case List() => origin ! HttpResponse( status = 404 )
+              }
+            } 
             case Failure(f) => origin ! HttpResponse( status = 503, entity = f.getMessage)
           }
         }
