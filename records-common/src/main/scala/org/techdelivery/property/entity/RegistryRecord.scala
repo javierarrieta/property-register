@@ -11,12 +11,14 @@ import spray.json._
 import DefaultJsonProtocol._
 import java.text.SimpleDateFormat
 import org.joda.time.format.ISODateTimeFormat
+import scala.math.BigDecimal
+import scala.math.BigDecimal._
 
-case class RegistryRecord(sale_date: Date, address: String, postal_code: String, county: String, price: Long,
-					full_market_price: Boolean, vat_exclusive: Boolean, description: String)
+case class RegistryRecord(sale_date: Date, address: String, postal_code: String, county: String,
+		price: BigDecimal, full_market_price: Boolean, vat_exclusive: Boolean, description: String)
 					
-case class MongoRegistryRecord(id: String, sale_date: Date, address: String, postal_code: String, county: String, price: Long,
-					full_market_price: Boolean, vat_exclusive: Boolean, description: String)
+case class MongoRegistryRecord(id: String, sale_date: Date, address: String, postal_code: String, county: String, 
+		price: BigDecimal, full_market_price: Boolean, vat_exclusive: Boolean, description: String)
 
 object RegistryRecord {
 	val formatter = new SimpleDateFormat("dd/MM/yyyy")
@@ -47,13 +49,12 @@ object RegistryRecord {
 }
 object RecordMapper {
   implicit object RecordMapper extends BSONDocumentWriter[RegistryRecord] {
-  
 	  def write(record: RegistryRecord) : BSONDocument = BSONDocument(
 	    "sale_date" -> BSONDateTime(record.sale_date.getTime()),
 	    "address" -> BSONString(record.address),
 	    "postal_code" -> BSONString(record.postal_code),
 	    "county" -> BSONString(record.county),
-	    "price" -> BSONLong(record.price),
+	    "price" -> BSONLong((record.price * 100.0).toLong),
 	    "full_market_price" -> BSONBoolean(record.full_market_price),
 	    "vat_exclusive" -> BSONBoolean(record.vat_exclusive),
 	    "description" -> BSONString(record.description)
@@ -67,7 +68,7 @@ object RecordMapper {
 	    "address" -> BSONString(record.address),
 	    "postal_code" -> BSONString(record.postal_code),
 	    "county" -> BSONString(record.county),
-	    "price" -> BSONLong(record.price),
+	    "price" -> BSONLong((record.price * 100.0).toLong),
 	    "full_market_price" -> BSONBoolean(record.full_market_price),
 	    "vat_exclusive" -> BSONBoolean(record.vat_exclusive),
 	    "description" -> BSONString(record.description)
@@ -79,7 +80,7 @@ object RecordMapper {
       doc.getAs[BSONString]("address").map(_.value).get,
       doc.getAs[BSONString]("postal_code").map(_.value).get,
       doc.getAs[BSONString]("county").map(_.value).get,
-      doc.getAs[BSONLong]("price").map(_.value).get,
+      BigDecimal(doc.getAs[BSONLong]("price").map(_.value).get) / 100,
       doc.getAs[BSONBoolean]("full_market_price").map(_.value).get,
       doc.getAs[BSONBoolean]("vat_exclusive").map(_.value).get,
       doc.getAs[BSONString]("description").map(_.value).get

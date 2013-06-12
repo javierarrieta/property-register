@@ -14,10 +14,10 @@ object RecordParser {
 	implicit def parseLine(line: String): RegistryRecord = {
 	  val fields = line.split(",").toArray
 	  return RegistryRecord(cleanDate(fields(0)), fields(1), fields(2), fields(3),
-	      cleanLong( fields(4) ), cleanBoolean(fields(5)), cleanBoolean(fields(6)), fields(7))
+	      cleanBD( fields(4) ), cleanBoolean(fields(5)), cleanBoolean(fields(6)), fields(7))
 	}
 	
-	private def cleanLong( value: String): Long = Long.parseLong(value.replaceAll("[^\\d.]+", ""),10)
+	private def cleanBD( value: String): BigDecimal = BigDecimal(value.replaceAll("[^\\d.]+", ""))
 	
 	private def cleanBoolean( value: String): Boolean = value.toLowerCase match {
     case "true" => true
