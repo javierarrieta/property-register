@@ -20,7 +20,7 @@ case class RegistryRecord(sale_date: Date, address: String, postal_code: String,
 case class MongoRegistryRecord(id: String, sale_date: Date, address: String, postal_code: String, county: String,
   price: BigDecimal, full_market_price: Boolean, vat_exclusive: Boolean, description: String)
 
-object RegistryRecord {
+object RegistryRecordLineParser {
   val formatter = new SimpleDateFormat("dd/MM/yyyy")
 
   private def cleanLong(value: String): Long = BigDecimal(value.replaceAll("[^\\d.]+", "")).longValue
@@ -51,7 +51,7 @@ object RegistryRecord {
 }
 
 object RecordMapper {
-  implicit object RecordMapper extends BSONDocumentWriter[RegistryRecord] {
+  implicit object RecordMapper extends BSONDocumentWriter[RegistryRecord] with BSONDocumentReader[RegistryRecord] {
     def write(record: RegistryRecord): BSONDocument = BSONDocument(
       "sale_date" -> BSONDateTime(record.sale_date.getTime()),
       "address" -> BSONString(record.address),
@@ -61,7 +61,19 @@ object RecordMapper {
       "full_market_price" -> BSONBoolean(record.full_market_price),
       "vat_exclusive" -> BSONBoolean(record.vat_exclusive),
       "description" -> BSONString(record.description))
+
+    def read(doc: BSONDocument): RegistryRecord = new RegistryRecord(
+      new Date(doc.getAs[BSONDateTime]("sale_date").map(_.value).get),
+      doc.getAs[BSONString]("address").map(_.value).get,
+      doc.getAs[BSONString]("postal_code").map(_.value).get,
+      doc.getAs[BSONString]("county").map(_.value).get,
+      BigDecimal(doc.getAs[BSONLong]("price").map(_.value).get) / 100,
+      doc.getAs[BSONBoolean]("full_market_price").map(_.value).get,
+      doc.getAs[BSONBoolean]("vat_exclusive").map(_.value).get,
+      doc.getAs[BSONString]("description").map(_.value).get
+    )
   }
+
   implicit object MongoRecordMapper extends BSONDocumentWriter[MongoRegistryRecord] with BSONDocumentReader[MongoRegistryRecord] {
 
     def write(record: MongoRegistryRecord): BSONDocument = BSONDocument(
@@ -87,16 +99,20 @@ object RecordMapper {
       doc.getAs[BSONString]("description").map(_.value).get)
   }
 
-  object RegistryRecordProtocol extends DefaultJsonProtocol {
-    val format = ISODateTimeFormat.dateTime()
-    implicit object DateJsonFormat extends JsonFormat[Date] {
-      def write(d: Date) = JsString(format.print(d.getTime))
-      def read(value: JsValue) = value match {
-        case JsString(s) => format.parseDateTime(s).toDate
-        case _ => throw new DeserializationException("Date Expected")
-      }
-    }
-    implicit val recordFormat = jsonFormat9(MongoRegistryRecord)
-  }
+}
 
+trait JsonDateConverter {
+  val format = ISODateTimeFormat.dateTime()
+  implicit object DateJsonFormat extends JsonFormat[Date] {
+    def write(d: Date) = JsString(format.print(d.getTime))
+    def read(value: JsValue) = value match {
+      case JsString(s) => format.parseDateTime(s).toDate
+      case _ => throw new DeserializationException("Date Expected")
+    }
+  }
+}
+
+object RegistryRecordProtocol extends DefaultJsonProtocol with JsonDateConverter {
+  implicit val mongoRecordFormat = jsonFormat9(MongoRegistryRecord)
+  implicit val recordFormat = jsonFormat8(RegistryRecord)
 }

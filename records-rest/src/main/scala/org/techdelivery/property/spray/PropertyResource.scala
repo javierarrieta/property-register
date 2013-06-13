@@ -10,9 +10,9 @@ import reactivemongo.bson.{BSONObjectID, BSONDocument}
 import reactivemongo.api.collections.default.BSONCollection
 import spray.json._
 import scala.util.{Failure, Success}
-import org.techdelivery.property.entity._
-import RecordMapper._
-import RegistryRecordProtocol._
+import org.techdelivery.property.entity.{MongoRegistryRecord, RegistryRecord}
+import org.techdelivery.property.entity.RecordMapper._
+import org.techdelivery.property.entity.RegistryRecordProtocol._
 
 class PropertyResource(collection: BSONCollection) extends Actor with ActorLogging {
   val get_rx = "^\\/property\\/(\\w*)$".r
@@ -43,6 +43,18 @@ class PropertyResource(collection: BSONCollection) extends Actor with ActorLoggi
         }
         case _ => origin ! HttpResponse(status = 404)
       }
+    }
+    case HttpRequest(POST, "/property", headers, entity, _) => {
+      val origin = sender
+      val body = entity.asString
+      val jsonData = body.asJson
+      val record : RegistryRecord = jsonData.convertTo[RegistryRecord]
+      val op = collection insert(record)
+      op onComplete {
+        case Success(o) => origin ! HttpResponse(status=201, entity = record.toJson.toString)
+        case Failure(t) => log.info("Error", t); origin ! HttpResponse(status=503)
+      }
+
     }
     case _ => sender ! HttpResponse(status = 404)
 

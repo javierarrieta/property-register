@@ -2,8 +2,8 @@ package org.techdelivery.property.mongo
 
 import akka.actor.{ActorLogging, Actor}
 import org.techdelivery.property.entity.RegistryRecord
+import org.techdelivery.property.entity.RegistryRecordLineParser._
 import org.techdelivery.property.entity.RecordMapper._
-import RegistryRecord._
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.util.Success
 import scala.util.Failure

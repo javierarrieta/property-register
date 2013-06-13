@@ -4,7 +4,7 @@ import scala.io.Source
 import scala.io.Codec
 import org.techdelivery.property.batch.parser.csvParser
 import akka.actor.{PoisonPill,Props}
-import org.techdelivery.property.entity.RegistryRecord
+import org.techdelivery.property.entity.{RegistryRecordLineParser, RegistryRecord}
 import org.techdelivery.property.mongo.MongoImporter
 import org.techdelivery.property.mongo.propertyMongoDB._
 
@@ -21,7 +21,7 @@ object ImporterApp extends App {
   def importRegistries(file: String) = {
     val lines = Source.fromFile(file)(Codec.ISO8859).getLines().drop(1)
     val records = lines.map(csvParser.parse(_)(0))
-    records.foreach { importer !  RegistryRecord(_) }
+    records.foreach { importer !  RegistryRecordLineParser(_) }
   }
   
 }
