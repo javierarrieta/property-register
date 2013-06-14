@@ -50,6 +50,20 @@ object RegistryRecordLineParser {
   private def combine(s1: String, s2: String): String = (List(s1, s2) mkString " ").trim
 }
 
+object MongoRegistryRecordFactory {
+  def apply( id: String,record: RegistryRecord): MongoRegistryRecord = new MongoRegistryRecord(
+    id,
+    record.sale_date,
+    record.address,
+    record.postal_code,
+    record.county,
+    record.price,
+    record.full_market_price,
+    record.vat_exclusive,
+    record.description
+  )
+}
+
 object RecordMapper {
   implicit object RecordMapper extends BSONDocumentWriter[RegistryRecord] with BSONDocumentReader[RegistryRecord] {
     def write(record: RegistryRecord): BSONDocument = BSONDocument(
