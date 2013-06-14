@@ -73,6 +73,26 @@ class PropertyResource(collection: BSONCollection) extends Actor with ActorLoggi
               case Failure(t) => log.info(t.getMessage, t); origin ! HttpResponse(status = 503)
             }
           }
+          case _ => origin ! HttpResponse(status = 404)
+        }
+      } catch {
+        case e: Exception => {
+          log.warning(e.getMessage); log.debug(e.getMessage, e); origin ! HttpResponse(status = 503)
+        }
+      }
+    }
+    case HttpRequest(DELETE, path, headers,_, _) => {
+      val origin = sender
+      try {
+        path match {
+          case get_rx(id) => {
+            val op = collection remove(BSONDocument("_id" -> BSONObjectID(id)))
+            op onComplete {
+              case Success(o) => origin ! HttpResponse(status = 200)
+              case Failure(t) => log.info(t.getMessage, t); origin ! HttpResponse(status = 503)
+            }
+          }
+          case _ => origin ! HttpResponse(status = 404)
         }
       } catch {
         case e: Exception => {
