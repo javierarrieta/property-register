@@ -10,4 +10,5 @@ object configuration {
   lazy val servers = conf.getStringList("mongo.servers").asScala.toSeq
   lazy val db = conf.getString("mongo.database")
   lazy val propertyCollectionName = conf.getString("mongo.collection.property")
+  lazy val checksumCollectionName = conf.getString("mongo.collection.checksum")
 }

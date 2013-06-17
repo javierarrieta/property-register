@@ -9,20 +9,26 @@ import scala.util.Success
 import scala.util.Failure
 import reactivemongo.api.collections.default.BSONCollection
 
-class MongoImporter(collection: BSONCollection) extends Actor with ActorLogging {
+class MongoImporter(propCollection: BSONCollection) extends Actor with ActorLogging {
   def receive = {
     case record: RegistryRecord => {
       val properRecord = cleanRecord(record)
-      val result = collection.insert(properRecord)
-      result onComplete {
-        case Success(success) => {
-          log info (record.toString)
-        }
-        case Failure(error) => {
-          log error (error, record.toString)
-        }
-      }
+      insertRecord(properRecord)
     }
     case message: AnyRef => log error("Message not expected " + message.getClass.getName)
   }
+  
+  private def insertRecord(record: RegistryRecord): Unit = {
+    val result = propCollection.insert(record)
+    result onComplete {
+      case Success(success) => {
+        log info (record.toString)
+      }
+      case Failure(error) => {
+        log error (error, record.toString)
+      }
+    }
+  }
+  
+  
 }

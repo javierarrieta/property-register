@@ -21,7 +21,10 @@ object ImporterApp extends App {
   def importRegistries(file: String) = {
     val lines = Source.fromFile(file)(Codec.ISO8859).getLines().drop(1)
     val records = lines.map(csvParser.parse(_)(0))
-    records.foreach { importer !  RegistryRecordLineParser(_) }
+    records.foreach { line =>
+      val csum = Checksum(line)
+      importer !  RegistryRecordLineParser(line)
+    }
   }
   
 }

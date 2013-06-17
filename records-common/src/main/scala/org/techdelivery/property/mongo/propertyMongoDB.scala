@@ -9,6 +9,7 @@ object propertyMongoDB {
   private implicit val mongo = new MongoDriver
   private val connection = mongo.connection(servers)
   val propertyDB = connection.db(db)
-  val propertyCollection: BSONCollection = propertyDB.collection(propertyCollectionName)
+  lazy val propertyCollection: BSONCollection = propertyDB.collection(propertyCollectionName)
+  lazy val checksumCollection: BSONCollection = propertyDB.collection(checksumCollectionName)
   lazy val actorSystem = mongo.system
 }

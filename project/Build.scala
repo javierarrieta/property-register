@@ -30,7 +30,7 @@ object Build extends Build {
   lazy val records_import = Project("records-import", file("records-import"))
     .settings(exampleSettings: _*)
     .settings(libraryDependencies ++=
-      compile(akkaActor) ++
+      compile(akkaActor, logging) ++
       test(specs2) ++
       provided(akkaSlf4j, logback)
     )
