@@ -18,12 +18,16 @@ object ImporterApp extends App {
 
   system.shutdown()
   
+  //val registerLine: List[String] => Unit = (line) => { importer !  RegistryRecordLineParser(line) }
+  
+  def registerLine(line: List[String]): Unit = { importer !  RegistryRecordLineParser(line) }
+  
   def importRegistries(file: String) = {
     val lines = Source.fromFile(file)(Codec.ISO8859).getLines().drop(1)
     val records = lines.map(csvParser.parse(_)(0))
     records.foreach { line =>
       val csum = Checksum(line)
-      importer !  RegistryRecordLineParser(line)
+      ChecksumChecker.runAfterCheck(line, registerLine )
     }
   }
   
