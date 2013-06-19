@@ -11,6 +11,7 @@ import scala.concurrent.ExecutionContext.Implicits._
 import scala.util.Success
 import scala.util.Failure
 import com.typesafe.scalalogging.slf4j.Logging
+import org.techdelivery.property.entity.RegistryRecord
 
 case class Checksum(id:Option[String], checksum: Array[Byte]) {
   def toHex(b: Array[Byte]): String = b.map{b => String.format("%02X", java.lang.Byte.valueOf(b))} mkString("")
@@ -20,7 +21,6 @@ case class Checksum(id:Option[String], checksum: Array[Byte]) {
 
 object Checksum extends Logging {
   def apply(checksum: Array[Byte]): Checksum = {
-    logger.debug(checksum.toString)
     new Checksum(None, checksum)
   }
   def apply(id: String, checksum: Array[Byte]): Checksum = new Checksum(Some(id),checksum)
@@ -36,26 +36,25 @@ object ChecksumChecker extends Logging {
   
   implicit def toBinary(d: Array[Byte]): BSONBinary = new BSONBinary(ArrayReadableBuffer(d), Subtype.Md5Subtype)
   
-  def runAfterCheck(parsedLine: List[String], f: List[String] => Unit) {
-    val sum = Checksum(parsedLine)
+  def runAfterCheck(sum: Checksum, record: RegistryRecord, f: RegistryRecord => Unit) {
     val cursor = col.find(BSONDocument("checksum" -> toBinary(sum.checksum))).cursor[BSONDocument].toList
     cursor onComplete {
       case Success(list) => {
         list match {
-          case Nil => insertChecksum(sum, parsedLine)(f)
-          case _ => logger.error("Line " + parsedLine + " already imported, ignoring")
+          case Nil => insertChecksum(sum, record)(f)
+          case _ => logger.error("Line " + record + " already imported, ignoring")
         }
       }
       case Failure(t) => { logger.error(t.getMessage); logger.debug(t.getMessage, t)}
     }
   }
   
-  private def insertChecksum(sum: Checksum, l: List[String])(f: List[String] => Unit): Unit = {
+  private def insertChecksum(sum: Checksum, record: RegistryRecord)(f: RegistryRecord => Unit): Unit = {
     val result = col.insert(BSONDocument("checksum" -> toBinary(sum.checksum)))
     result onComplete {
       case Success(op) => { 
-        logger.info("Added checksum " + sum.checksum.map("%02X" format _).mkString)
-        f(l)
+        logger.debug("Added checksum: " + sum)
+        f(record)
       }
       case Failure(t) => { logger.error(t.getMessage); logger.debug(t.getMessage, t)}
     }
