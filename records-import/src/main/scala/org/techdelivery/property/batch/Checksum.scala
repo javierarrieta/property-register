@@ -12,7 +12,7 @@ import scala.util.Success
 import scala.util.Failure
 import com.typesafe.scalalogging.slf4j.Logging
 import org.techdelivery.property.entity.{RegistryRecordLineParser, RegistryRecord}
-import akka.actor.{ActorRef, Actor, ActorLogging}
+import akka.actor.{PoisonPill, ActorRef, Actor, ActorLogging}
 
 case class Checksum(id:Option[String], checksum: Array[Byte]) {
   def toHex(b: Array[Byte]): String = b.map{b => String.format("%02X", java.lang.Byte.valueOf(b))} mkString("")
@@ -40,7 +40,7 @@ class ChecksumCheckerActor(importer: ActorRef) extends Actor with ActorLogging {
       try {
         val csum = Checksum(line)
         val record = RegistryRecordLineParser(line)
-        runAfterCheck(csum, record)
+        checkAndInsert(csum, record)
       } catch {
         case e: IllegalArgumentException => log.warning(line + ": " + e.getMessage)
       }
@@ -51,7 +51,7 @@ class ChecksumCheckerActor(importer: ActorRef) extends Actor with ActorLogging {
 
   implicit def toBinary(d: Array[Byte]): BSONBinary = new BSONBinary(ArrayReadableBuffer(d), Subtype.Md5Subtype)
 
-  def runAfterCheck(sum: Checksum, record: RegistryRecord) {
+  def checkAndInsert(sum: Checksum, record: RegistryRecord) {
     val cursor = col.find(BSONDocument("checksum" -> toBinary(sum.checksum))).cursor[BSONDocument].toList
     cursor onComplete {
       case Success(list) => {

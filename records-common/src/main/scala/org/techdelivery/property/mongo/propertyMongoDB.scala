@@ -4,6 +4,7 @@ import scala.concurrent.ExecutionContext.Implicits._
 import reactivemongo.api.MongoDriver
 import org.techdelivery.property.settings.configuration._
 import reactivemongo.api.collections.default.BSONCollection
+import akka.actor.PoisonPill
 
 object propertyMongoDB {
   private implicit val mongo = new MongoDriver
@@ -12,4 +13,5 @@ object propertyMongoDB {
   lazy val propertyCollection: BSONCollection = propertyDB.collection(propertyCollectionName)
   lazy val checksumCollection: BSONCollection = propertyDB.collection(checksumCollectionName)
   lazy val actorSystem = mongo.system
+  def shutdown() : Unit = { mongo close }
 }
