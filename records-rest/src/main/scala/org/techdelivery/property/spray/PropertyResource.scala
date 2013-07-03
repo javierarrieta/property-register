@@ -6,13 +6,22 @@ import spray.http.HttpHeaders._
 import spray.http.HttpMethods._
 import spray.http.MediaTypes._
 import scala.concurrent.ExecutionContext.Implicits.global
-import reactivemongo.bson.{BSONObjectID, BSONDocument}
+import reactivemongo.bson._
 import reactivemongo.api.collections.default.BSONCollection
 import spray.json._
 import scala.util.{Failure, Success}
 import org.techdelivery.property.entity.{MongoRegistryRecordFactory, MongoRegistryRecord, RegistryRecord}
 import org.techdelivery.property.entity.RecordMapper._
 import org.techdelivery.property.entity.RegistryRecordProtocol._
+import org.techdelivery.property.entity.MongoRegistryRecord
+import scala.util.Failure
+import reactivemongo.bson.BSONString
+import scala.Some
+import org.techdelivery.property.entity.RegistryRecord
+import spray.http.HttpResponse
+import scala.util.Success
+import reactivemongo.api.collections.default.BSONCollection
+import scala.concurrent.Future
 
 class PropertyResource(collection: BSONCollection) extends Actor with ActorLogging {
   val get_rx = "^\\/property\\/(\\w*)$".r
@@ -20,12 +29,11 @@ class PropertyResource(collection: BSONCollection) extends Actor with ActorLoggi
   def receive = {
     case HttpRequest(GET, path, _, _, _) => {
       val origin = sender
-      path match {
-        case get_rx(id) => {
+      Resource(path) match {
+        case Resource(List("property", id: String), _) => {
           try {
             val filter = BSONDocument("_id" -> BSONObjectID(id))
-            val result = collection.find(filter).cursor[MongoRegistryRecord]
-            val response = result.toList
+            val response = runFilterFuture(filter)
             response onComplete {
               case Success(list) => {
                 list match {
@@ -41,6 +49,13 @@ class PropertyResource(collection: BSONCollection) extends Actor with ActorLoggi
             case e: Exception => {
               log.warning(e.getMessage); log.debug(e.getMessage, e); origin ! HttpResponse(status = 500)
             }
+          }
+        }
+        case Resource(List("property"), query_params) => {
+          val filter = query_to_bson(query_params)
+          runFilterFuture(filter) onComplete {
+            case Success(list) => origin ! HttpResponse(status = 200, entity = HttpBody(`application/json`, list.toJson.toString ))
+            case Failure(f) => origin ! HttpResponse(status = 503, entity = f.getMessage)
           }
         }
         case _ => origin ! HttpResponse(status = 404)
@@ -101,6 +116,24 @@ class PropertyResource(collection: BSONCollection) extends Actor with ActorLoggi
       }
     }
     case _ => sender ! HttpResponse(status = 404)
+  }
+
+
+  protected def runFilterFuture(filter: BSONDocument): Future[List[MongoRegistryRecord]] = {
+    collection.find(filter).cursor[MongoRegistryRecord].toList
+  }
+
+  private def query_to_bson(query: Map[String,Option[String]]): BSONDocument = {
+    def q(remaining_query: List[(String, Option[String])], doc: BSONDocument): BSONDocument = {
+      remaining_query.toList match {
+        case Nil => doc
+        case (k,v) :: xs => {
+          val value: BSONValue = v match { case None => BSONNull; case Some(a) => BSONString(a) }
+          doc ++ q(xs, doc ++ BSONDocument(k -> value ))
+        }
+      }
+    }
+    q(query.toList, BSONDocument())
   }
 
   def extractRecord(entity: HttpEntity): RegistryRecord = {
