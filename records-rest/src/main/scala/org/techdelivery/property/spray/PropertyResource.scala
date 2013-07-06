@@ -22,9 +22,11 @@ import spray.http.HttpResponse
 import scala.util.Success
 import reactivemongo.api.collections.default.BSONCollection
 import scala.concurrent.Future
+import java.io.Serializable
+import reactivemongo.api.QueryOpts
 
 class PropertyResource(collection: BSONCollection) extends Actor with ActorLogging {
-  val get_rx = "^\\/property\\/(\\w*)$".r
+  val get_rx = """^\/property\/(\w*)$""".r
 
   def receive = {
     case HttpRequest(GET, path, _, _, _) => {
@@ -53,7 +55,8 @@ class PropertyResource(collection: BSONCollection) extends Actor with ActorLoggi
         }
         case Resource(List("property"), query_params) => {
           val filter = query_to_bson(query_params)
-          runFilterFuture(filter) onComplete {
+          val pagination = Pagination(query_params)
+          runFilterFuture(filter, pagination) onComplete {
             case Success(list) => origin ! HttpResponse(status = 200, entity = HttpBody(`application/json`, list.toJson.toString ))
             case Failure(f) => origin ! HttpResponse(status = 503, entity = f.getMessage)
           }
@@ -118,18 +121,23 @@ class PropertyResource(collection: BSONCollection) extends Actor with ActorLoggi
     case _ => sender ! HttpResponse(status = 404)
   }
 
-
-  protected def runFilterFuture(filter: BSONDocument): Future[List[MongoRegistryRecord]] = {
-    collection.find(filter).cursor[MongoRegistryRecord].toList
+  protected def runFilterFuture(filter: BSONDocument, pagination: Pagination = Pagination()): Future[List[MongoRegistryRecord]] = {
+    val opts = new QueryOpts(skipN = pagination.page * pagination.limit)
+    collection.find(filter).options(opts).cursor[MongoRegistryRecord].toList(pagination.limit)
   }
 
   private def query_to_bson(query: Map[String,Option[String]]): BSONDocument = {
+    val query_opts_fields = Set("page","limit")
     def q(remaining_query: List[(String, Option[String])], doc: BSONDocument): BSONDocument = {
       remaining_query.toList match {
         case Nil => doc
         case (k,v) :: xs => {
-          val value: BSONValue = v match { case None => BSONNull; case Some(a) => BSONString(a) }
-          doc ++ q(xs, doc ++ BSONDocument(k -> value ))
+          if( query_opts_fields contains k )
+            doc
+          else {
+            val value: BSONValue = v match { case None => BSONNull; case Some(a) => BSONString(a) }
+            doc ++ q(xs, doc ++ BSONDocument(k -> value ))
+          }
         }
       }
     }
@@ -141,5 +149,28 @@ class PropertyResource(collection: BSONCollection) extends Actor with ActorLoggi
     val jsonData = body.asJson
     val record: RegistryRecord = jsonData.convertTo[RegistryRecord]
     record
+  }
+
+  case class Pagination(page: Int, limit: Int)
+
+  object Pagination {
+    def default_page = "0"
+    def default_limit = "100"
+    val max_limit: Int = 500
+    val default_pagination = new Pagination(page = default_page.toInt, limit = default_limit.toInt)
+    def apply(query_params: Map[String, Option[String]]): Pagination = {
+      val page = query_params getOrElse ("page",  None) getOrElse (default_page) toInt
+      val parsed_limit = query_params getOrElse ("limit", None) getOrElse (default_limit) toInt
+      val limit = parsed_limit match {
+        case x if x < 1 => default_limit.toInt
+        case x if x > max_limit => max_limit
+        case x => x
+      }
+      new Pagination(
+        page  = page,
+        limit = limit
+      )
+    }
+    def apply(): Pagination = default_pagination
   }
 }
