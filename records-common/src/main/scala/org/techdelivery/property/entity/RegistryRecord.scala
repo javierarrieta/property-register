@@ -15,10 +15,10 @@ import scala.math.BigDecimal
 import scala.math.BigDecimal._
 
 case class RegistryRecord(sale_date: Date, address: String, postal_code: String, county: String,
-  price: BigDecimal, full_market_price: Boolean, vat_exclusive: Boolean, description: String)
+  price: BigDecimal, full_market_price: Boolean, vat_exclusive: Boolean, description: String, coord: Option[Coordinates])
 
 case class MongoRegistryRecord(id: String, sale_date: Date, address: String, postal_code: String, county: String,
-  price: BigDecimal, full_market_price: Boolean, vat_exclusive: Boolean, description: String)
+  price: BigDecimal, full_market_price: Boolean, vat_exclusive: Boolean, description: String, coord: Option[Coordinates])
 
 object RegistryRecordLineParser {
   val formatter = new SimpleDateFormat("dd/MM/yyyy")
@@ -34,7 +34,7 @@ object RegistryRecordLineParser {
   private def cleanDate(value: String): Date = formatter.parse(value.replaceAll("\"", ""))
 
   def apply(fields: List[String]): RegistryRecord = new RegistryRecord(cleanDate(fields(0)), fields(1), fields(2), fields(3),
-    cleanLong(fields(4)), cleanBoolean(fields(5)), cleanBoolean(fields(6)), combine(fields(7), fields(8)))
+    cleanLong(fields(4)), cleanBoolean(fields(5)), cleanBoolean(fields(6)), combine(fields(7), fields(8)), None)
 
   def cleanRecord(original: RegistryRecord): RegistryRecord = {
     val rx = "\\,\\ *(\\w*\\ \\d{1,2})$".r
@@ -60,11 +60,14 @@ object MongoRegistryRecordFactory {
     record.price,
     record.full_market_price,
     record.vat_exclusive,
-    record.description
+    record.description,
+    record.coord
   )
 }
 
 object RecordMapper {
+  import CoordinatesMapper._
+
   implicit object RecordMapper extends BSONDocumentWriter[RegistryRecord] with BSONDocumentReader[RegistryRecord] {
     def write(record: RegistryRecord): BSONDocument = BSONDocument(
       "sale_date" -> BSONDateTime(record.sale_date.getTime()),
@@ -74,7 +77,9 @@ object RecordMapper {
       "price" -> BSONLong((record.price * 100.0).toLong),
       "full_market_price" -> BSONBoolean(record.full_market_price),
       "vat_exclusive" -> BSONBoolean(record.vat_exclusive),
-      "description" -> BSONString(record.description))
+      "description" -> BSONString(record.description),
+      "coords" -> record.coord
+    )
 
     def read(doc: BSONDocument): RegistryRecord = new RegistryRecord(
       new Date(doc.getAs[BSONDateTime]("sale_date").map(_.value).get),
@@ -84,7 +89,8 @@ object RecordMapper {
       BigDecimal(doc.getAs[BSONLong]("price").map(_.value).get) / 100,
       doc.getAs[BSONBoolean]("full_market_price").map(_.value).get,
       doc.getAs[BSONBoolean]("vat_exclusive").map(_.value).get,
-      doc.getAs[BSONString]("description").map(_.value).get
+      doc.getAs[BSONString]("description").map(_.value).get,
+      doc.getAs[Coordinates]("coords")
     )
   }
 
@@ -99,7 +105,9 @@ object RecordMapper {
       "price" -> BSONLong((record.price * 100.0).toLong),
       "full_market_price" -> BSONBoolean(record.full_market_price),
       "vat_exclusive" -> BSONBoolean(record.vat_exclusive),
-      "description" -> BSONString(record.description))
+      "description" -> BSONString(record.description),
+      "coords" -> record.coord
+    )
 
     def read(doc: BSONDocument): MongoRegistryRecord = new MongoRegistryRecord(
       doc.getAs[BSONObjectID]("_id").get.stringify,
@@ -110,7 +118,9 @@ object RecordMapper {
       BigDecimal(doc.getAs[BSONLong]("price").map(_.value).get) / 100,
       doc.getAs[BSONBoolean]("full_market_price").map(_.value).get,
       doc.getAs[BSONBoolean]("vat_exclusive").map(_.value).get,
-      doc.getAs[BSONString]("description").map(_.value).get)
+      doc.getAs[BSONString]("description").map(_.value).get,
+      doc.getAs[Coordinates]("coords")
+    )
   }
 
 }
@@ -126,7 +136,8 @@ trait JsonDateConverter {
   }
 }
 
-object RegistryRecordProtocol extends DefaultJsonProtocol with JsonDateConverter {
-  implicit val mongoRecordFormat = jsonFormat9(MongoRegistryRecord)
-  implicit val recordFormat = jsonFormat8(RegistryRecord)
+object RegistryRecordProtocol extends DefaultJsonProtocol with JsonDateConverter with CoordinatesProtocol {
+
+  implicit val mongoRecordFormat = jsonFormat10(MongoRegistryRecord)
+  implicit val recordFormat = jsonFormat9(RegistryRecord)
 }
