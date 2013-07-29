@@ -15,10 +15,10 @@ trait CoordinatesProtocol extends DefaultJsonProtocol {
 
 object CoordinatesMapper {
   implicit object CoordinatesMapper extends BSONDocumentWriter[Coordinates] with BSONDocumentReader[Coordinates] {
-    override def write(coord: Coordinates): BSONDocument = BSONDocument("lat" -> coord.x, "lon" -> coord.y)
+    override def write(coord: Coordinates): BSONDocument = BSONDocument("lat" -> coord.x, "lng" -> coord.y)
     override def read(doc: BSONDocument): Coordinates = new Coordinates(
         doc.getAs[BSONDouble]("lat").map(_ value) get,
-        doc.getAs[BSONDouble]("lon").map(_ value) get
+        doc.getAs[BSONDouble]("lng").map(_ value) get
       )
   }
 }

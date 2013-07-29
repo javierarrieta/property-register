@@ -78,7 +78,7 @@ object RecordMapper {
       "full_market_price" -> BSONBoolean(record.full_market_price),
       "vat_exclusive" -> BSONBoolean(record.vat_exclusive),
       "description" -> BSONString(record.description),
-      "coords" -> record.coord
+      "loc" -> record.coord
     )
 
     def read(doc: BSONDocument): RegistryRecord = new RegistryRecord(
@@ -90,7 +90,7 @@ object RecordMapper {
       doc.getAs[BSONBoolean]("full_market_price").map(_.value).get,
       doc.getAs[BSONBoolean]("vat_exclusive").map(_.value).get,
       doc.getAs[BSONString]("description").map(_.value).get,
-      doc.getAs[Coordinates]("coords")
+      doc.getAs[Coordinates]("loc")
     )
   }
 
@@ -106,7 +106,7 @@ object RecordMapper {
       "full_market_price" -> BSONBoolean(record.full_market_price),
       "vat_exclusive" -> BSONBoolean(record.vat_exclusive),
       "description" -> BSONString(record.description),
-      "coords" -> record.coord
+      "loc" -> record.coord
     )
 
     def read(doc: BSONDocument): MongoRegistryRecord = new MongoRegistryRecord(
@@ -119,7 +119,7 @@ object RecordMapper {
       doc.getAs[BSONBoolean]("full_market_price").map(_.value).get,
       doc.getAs[BSONBoolean]("vat_exclusive").map(_.value).get,
       doc.getAs[BSONString]("description").map(_.value).get,
-      doc.getAs[Coordinates]("coords")
+      doc.getAs[Coordinates]("loc")
     )
   }
 
