@@ -11,4 +11,5 @@ object configuration {
   lazy val db = conf.getString("mongo.database")
   lazy val propertyCollectionName = conf.getString("mongo.collection.property")
   lazy val checksumCollectionName = conf.getString("mongo.collection.checksum")
+  lazy val geocoderToken = conf.getString("geocoder.token")
 }

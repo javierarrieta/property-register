@@ -1,10 +1,13 @@
 package org.techdelivery.property.spray
 
 import java.net.URLDecoder
+import spray.http.Uri
 
 case class Resource(path:List[String],query:Map[String,Option[String]])
 
 object Resource {
+
+  def apply(uri: Uri): Resource = apply(uri toString)
   def apply(uri: String): Resource = {
     val (path,query) = uri.split("""\?""").toList match {
       case x :: Nil => (x,None)

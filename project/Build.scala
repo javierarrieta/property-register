@@ -23,15 +23,15 @@ object Build extends Build {
     .settings(exampleSettings: _*)
     .settings(libraryDependencies ++=
     compile(rMongo, sprayJson, time) ++
-      test(specs2) ++
+      test(specs2, scalatest) ++
       provided(logback)
   )
 
   lazy val records_import = Project("records-import", file("records-import"))
     .settings(exampleSettings: _*)
     .settings(libraryDependencies ++=
-      compile(akkaActor, logging) ++
-      test(specs2) ++
+      compile(akkaActor, sprayClient, logging) ++
+      test(specs2, scalatest) ++
       provided(akkaSlf4j, logback)
     )
     .dependsOn(records_common)
@@ -40,7 +40,7 @@ object Build extends Build {
     .settings(exampleSettings: _*)
     .settings(libraryDependencies ++=
       compile(akkaActor, sprayCan, sprayRouting, sprayJson, logging) ++
-      test(specs2) ++
+      test(specs2, scalatest) ++
       provided(akkaSlf4j, logback)
     )
     .dependsOn(records_common)

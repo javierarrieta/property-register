@@ -1,7 +1,7 @@
 package org.techdelivery.property.spray
 
 import akka.actor.{ActorLogging, Actor}
-import spray.http.{HttpEntity, HttpBody, HttpResponse, HttpRequest}
+import spray.http._
 import spray.http.HttpHeaders._
 import spray.http.HttpMethods._
 import spray.http.MediaTypes._
@@ -18,12 +18,21 @@ import scala.util.Failure
 import reactivemongo.bson.BSONString
 import scala.Some
 import org.techdelivery.property.entity.RegistryRecord
-import spray.http.HttpResponse
 import scala.util.Success
 import reactivemongo.api.collections.default.BSONCollection
 import scala.concurrent.Future
 import java.io.Serializable
 import reactivemongo.api.QueryOpts
+import spray.http.HttpRequest
+import org.techdelivery.property.entity.MongoRegistryRecord
+import scala.util.Failure
+import reactivemongo.bson.BSONString
+import scala.Some
+import org.techdelivery.property.entity.RegistryRecord
+import reactivemongo.api.QueryOpts
+import spray.http.HttpResponse
+import scala.util.Success
+import reactivemongo.api.collections.default.BSONCollection
 
 class PropertyResource(collection: BSONCollection) extends Actor with ActorLogging {
   val get_rx = """^\/property\/(\w*)$""".r
@@ -39,7 +48,7 @@ class PropertyResource(collection: BSONCollection) extends Actor with ActorLoggi
             response onComplete {
               case Success(list) => {
                 list match {
-                  case record :: Nil => origin ! HttpResponse(status = 200, entity = HttpBody(`application/json`, record.toJson.toString))
+                  case record :: Nil => origin ! HttpResponse(status = 200, entity = HttpEntity(`application/json`, record.toJson.toString))
                   case record :: xs => log.error("Get " + collection.name + "[" + id + "] returned " + list.size + " matches instead of 1")
                   case Nil => origin ! HttpResponse(status = 404)
                 }
@@ -57,14 +66,14 @@ class PropertyResource(collection: BSONCollection) extends Actor with ActorLoggi
           val filter = query_to_bson(query_params)
           val pagination = Pagination(query_params)
           runFilterFuture(filter, pagination) onComplete {
-            case Success(list) => origin ! HttpResponse(status = 200, entity = HttpBody(`application/json`, list.toJson.toString ))
+            case Success(list) => origin ! HttpResponse(status = 200, entity = HttpEntity(`application/json`, list.toJson.toString ))
             case Failure(f) => origin ! HttpResponse(status = 503, entity = f.getMessage)
           }
         }
         case _ => origin ! HttpResponse(status = 404)
       }
     }
-    case HttpRequest(POST, "/property", headers, entity, _) => {
+    case HttpRequest(POST, Uri.Path("/property"), headers, entity, _) => {
       val origin = sender
       try {
         val record: RegistryRecord = extractRecord(entity)
