@@ -13,6 +13,8 @@ The code is written in Scala, using Akka and Spray.io as main frameworks. Reacti
 
 Sbt is used as build management tool
 
+[Link to Technical Design](https://github.com/javierarrieta/property-register/wiki/Technical-Design)
+
 ##Development guide
 
 Requirements:
