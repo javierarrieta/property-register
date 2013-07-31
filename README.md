@@ -5,6 +5,8 @@ Property Register is a REST API server to query data from the property register 
 
 To import data from the files the propery register provides there is an importer module that will insert into the database the records not yet imported
 
+More detailed information in the [wiki](https://github.com/javierarrieta/property-register/wiki)
+
 ##Technologies
 
 The code is written in Scala, using Akka and Spray.io as main frameworks. Reactivemongo is used to connect to Mongodb
