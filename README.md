@@ -3,7 +3,7 @@ Property Register
 
 Property Register is a REST API server to query data from the property register of Ireland (http://www.propertypriceregister.ie/)
 
-To import data from the files the propery register provides there is an importer module that will insert into the database the records not yet imported
+To import data from the files the property register provides there is an importer module that will insert into the database the records not yet imported
 
 More detailed information in the [wiki](https://github.com/javierarrieta/property-register/wiki)
 
