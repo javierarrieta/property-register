@@ -5,7 +5,7 @@ import scala.collection.JavaConverters._
 
 object configuration {
   private val defaultConf = ConfigFactory.load
-  lazy val conf = ConfigFactory.load("mongo-app").withFallback(defaultConf)
+  val conf = ConfigFactory.load("mongo-app").withFallback(defaultConf)
 
   lazy val servers = conf.getStringList("mongo.servers").asScala.toSeq
   lazy val db = conf.getString("mongo.database")
