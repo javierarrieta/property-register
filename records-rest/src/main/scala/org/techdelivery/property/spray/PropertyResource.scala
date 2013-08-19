@@ -2,39 +2,25 @@ package org.techdelivery.property.spray
 
 import akka.actor.{ActorLogging, Actor}
 import spray.http._
-import spray.http.HttpHeaders._
 import spray.http.HttpMethods._
 import spray.http.MediaTypes._
 import scala.concurrent.ExecutionContext.Implicits.global
 import reactivemongo.bson._
-import reactivemongo.api.collections.default.BSONCollection
 import spray.json._
-import scala.util.{Failure, Success}
-import org.techdelivery.property.entity.{MongoRegistryRecordFactory, MongoRegistryRecord, RegistryRecord}
+import org.techdelivery.property.entity.{Box, MongoRegistryRecordFactory, MongoRegistryRecord, RegistryRecord}
 import org.techdelivery.property.entity.RecordMapper._
 import org.techdelivery.property.entity.RegistryRecordProtocol._
-import org.techdelivery.property.entity.MongoRegistryRecord
-import scala.util.Failure
-import reactivemongo.bson.BSONString
-import scala.Some
-import org.techdelivery.property.entity.RegistryRecord
-import scala.util.Success
-import reactivemongo.api.collections.default.BSONCollection
 import scala.concurrent.Future
-import java.io.Serializable
-import reactivemongo.api.QueryOpts
 import spray.http.HttpRequest
-import org.techdelivery.property.entity.MongoRegistryRecord
 import scala.util.Failure
 import reactivemongo.bson.BSONString
 import scala.Some
-import org.techdelivery.property.entity.RegistryRecord
 import reactivemongo.api.QueryOpts
 import spray.http.HttpResponse
 import scala.util.Success
 import reactivemongo.api.collections.default.BSONCollection
 
-class PropertyResource(collection: BSONCollection) extends Actor with ActorLogging {
+class PropertyResource(collection: BSONCollection) extends Actor with ActorLogging with CoordinatesHelper {
   val get_rx = """^\/property\/(\w*)$""".r
 
   def receive = {
@@ -137,6 +123,7 @@ class PropertyResource(collection: BSONCollection) extends Actor with ActorLoggi
 
   private def query_to_bson(query: Map[String,Option[String]]): BSONDocument = {
     val query_opts_fields = Set("page","limit")
+
     def q(remaining_query: List[(String, Option[String])], doc: BSONDocument): BSONDocument = {
       remaining_query.toList match {
         case Nil => doc
@@ -144,8 +131,12 @@ class PropertyResource(collection: BSONCollection) extends Actor with ActorLoggi
           if( query_opts_fields contains k )
             doc
           else {
-            val value: BSONValue = v match { case None => BSONNull; case Some(a) => BSONString(a) }
-            doc ++ q(xs, doc ++ BSONDocument(k -> value ))
+            val d: BSONDocument = (k,v) match {
+                case ("box", Some(b)) => bounding_box_query(b)
+                case (_,None) => BSONDocument( k -> BSONNull)
+                case (_,Some(a)) => BSONDocument( k -> BSONString(a))
+            }
+            doc ++ q(xs, doc ++ d )
           }
         }
       }

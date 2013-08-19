@@ -9,6 +9,13 @@ case class Coordinates(x: Double,y:Double) {
   def <->(coord: Coordinates): Double = distance(coord)
 }
 
+case class Box(c1: Coordinates, c2: Coordinates) {
+  def area = (c1.x - c2.x) * (c1.x - c2.x) + (c1.y - c2.y)*(c1.y - c2.y)
+  def diagonal = c1.distance(c2)
+  def width = Math.abs(c1.x - c2.x)
+  def height = Math.abs(c1.y - c2.y)
+}
+
 trait CoordinatesProtocol extends DefaultJsonProtocol {
   implicit val jsonFormat = jsonFormat2(Coordinates)
 }
