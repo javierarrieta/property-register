@@ -2,8 +2,12 @@ package org.techdelivery.property.spray
 
 import org.scalatest.FunSuite
 import org.techdelivery.property.entity.{Box, Coordinates}
+import reactivemongo.bson.{BSONDocument, BSONArray}
 
 class CoordinatesHelperTest extends FunSuite with CoordinatesHelper {
+
+  val (c1x,c1y,c2x,c2y) = (23423.3244687, -29.3222, -0.23, 99.999)
+  val box = Box( c1x, c1y, c2x, c2y )
 
   test("Double parse") {
     def assert_value(s:String): Unit = assert( DoubleParser(s) == s.toDouble )
@@ -52,14 +56,26 @@ class CoordinatesHelperTest extends FunSuite with CoordinatesHelper {
   }
 
   test("Box to BSON") {
-    fail
+    assert( to_bson( box ) == BSONDocument( "$box" -> BSONArray( BSONArray(c1x,c1y), BSONArray(c2x,c2y) ) ) )
   }
 
   test("Box Query from Box") {
-    fail
+    assert(
+      bounding_box_query(box) == BSONDocument(
+        "loc" -> BSONDocument(
+          "$geoWithin" -> to_bson(box)
+        )
+      )
+    )
   }
 
   test("Box Query from String") {
-    fail
+    assert(
+      bounding_box_query("[[" + c1x + "," + c1y + "],[" + c2x + "," + c2y + "]]") == BSONDocument(
+        "loc" -> BSONDocument(
+          "$geoWithin" -> to_bson(box)
+        )
+      )
+    )
   }
 }
