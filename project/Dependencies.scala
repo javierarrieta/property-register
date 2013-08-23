@@ -2,11 +2,12 @@ import sbt._
 
 object Dependencies {
 
-  val sprayVersion = "1.2-M8"
+  val sprayVersion = "1.2-20130727"
   val akkaVersion = "2.2.0"
   
   val resolutionRepos = Seq(
     "spray repo" at "http://repo.spray.io/",
+    "spray nighties" at "http://nightlies.spray.io/",
     "typesafe repo" at "http://repo.typesafe.com/typesafe/releases",
     "Sonatype Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/"
   )
@@ -23,7 +24,7 @@ object Dependencies {
   val sprayHttp     = "io.spray"                                %   "spray-http"                  % sprayVersion
   val sprayHttpx    = "io.spray"                                %   "spray-httpx"                 % sprayVersion
   val sprayClient   = "io.spray"                                %   "spray-client"                % sprayVersion
-  val scalaReflect  = "org.scala-lang"                          %   "scala-reflect"               % "2.10.0"
+  val scalaReflect  = "org.scala-lang"                          %   "scala-reflect"               % "2.10.2"
   val akkaActor     = "com.typesafe.akka"                       %%  "akka-actor"                  % akkaVersion
   val akkaSlf4j     = "com.typesafe.akka"                       %%  "akka-slf4j"                  % akkaVersion
   val akkaTestKit   = "com.typesafe.akka"                       %%  "akka-testkit"                % akkaVersion
