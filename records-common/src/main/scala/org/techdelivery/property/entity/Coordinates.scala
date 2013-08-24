@@ -22,7 +22,6 @@ object Box {
   }
 }
 
-
 trait CoordinatesProtocol extends DefaultJsonProtocol {
   implicit val jsonFormat = jsonFormat2(Coordinates)
 }
