@@ -4,7 +4,9 @@ import org.scalatest.FunSuite
 import org.techdelivery.property.entity.{Box, Coordinates}
 import reactivemongo.bson.{BSONDocument, BSONArray}
 
-class CoordinatesHelperTest extends FunSuite with CoordinatesHelper {
+import CoordinatesHelper._
+
+class CoordinatesHelperTest extends FunSuite {
 
   val (c1x,c1y,c2x,c2y) = (23423.3244687, -29.3222, -0.23, 99.999)
   val box = Box( c1x, c1y, c2x, c2y )

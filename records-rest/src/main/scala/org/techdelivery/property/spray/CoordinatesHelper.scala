@@ -37,7 +37,7 @@ object BoxParser extends CoordsParser {
   }
 }
 
-trait CoordinatesHelper {
+object CoordinatesHelper {
 
   def bounding_box_query(s: String): BSONDocument = bounding_box_query(BoxParser(s))
 
