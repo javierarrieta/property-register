@@ -161,14 +161,14 @@ trait PropertyServiceRoute extends HttpService {
         case Nil => doc
         case (k, v) :: xs => {
           if (query_opts_fields contains k)
-            doc
+            q(xs, doc)
           else {
             val d: BSONDocument = (k, v) match {
               case ("box", List(b)) => bounding_box_query(b)
               case (_, List()) => BSONDocument(k -> BSONNull)
               case (_, a :: as ) => BSONDocument(k -> BSONString(a))
             }
-            doc ++ q(xs, doc ++ d)
+            q(xs, doc ++ d)
           }
         }
       }
