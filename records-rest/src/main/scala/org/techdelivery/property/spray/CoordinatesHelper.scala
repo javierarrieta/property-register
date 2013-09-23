@@ -1,18 +1,22 @@
 package org.techdelivery.property.spray
 
-import reactivemongo.bson.{BSONDouble, BSONArray, BSONDocument}
+import reactivemongo.bson.{BSONArray, BSONDocument}
 import org.techdelivery.property.entity.{Coordinates, Box}
 import scala.util.parsing.combinator.RegexParsers
 import scala._
 import reactivemongo.bson.BSONDouble
 
 trait CoordsParser extends RegexParsers {
-  def number: Parser[Double] = """(-)?\d+(\.\d*)?""".r ^^ { _.toDouble }
-  def coords: Parser[Coordinates] = "[" ~ number ~ "," ~ number ~ "]" ^^ {
-    case p1 ~ x ~ c ~ y ~ p2 => Coordinates(x,y)
+  def number: Parser[Double] = """(-)?\d+(\.\d*)?""".r ^^ {
+    _.toDouble
   }
+
+  def coords: Parser[Coordinates] = "[" ~ number ~ "," ~ number ~ "]" ^^ {
+    case p1 ~ x ~ c ~ y ~ p2 => Coordinates(x, y)
+  }
+
   def box: Parser[Box] = "[" ~ coords ~ "," ~ coords ~ "]" ^^ {
-    case p1 ~ c1 ~ c ~ c2 ~ p2 => Box(c1,c2)
+    case p1 ~ c1 ~ c ~ c2 ~ p2 => Box(c1, c2)
   }
 }
 

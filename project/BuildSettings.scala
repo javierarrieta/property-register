@@ -1,12 +1,12 @@
 import sbt._
 import Keys._
+import sbt.Keys._
+import xerial.sbt.Pack._
 import java.text.SimpleDateFormat
 import java.util.Date
-import sbtassembly.Plugin._
-import AssemblyKeys._
 
 object BuildSettings {
-  val VERSION = "0.0.1"
+  val VERSION = "0.0.2"
 
   lazy val basicSettings = seq(
     version               := VERSION + new SimpleDateFormat("-yyyyMMdd").format(new Date),
@@ -31,6 +31,8 @@ object BuildSettings {
     )
   )
 
-  lazy val exampleSettings = basicSettings ++ assemblySettings
+  lazy val exampleSettings = basicSettings
+
+  lazy val packageAppSettings = basicSettings ++ packSettings
 
 }

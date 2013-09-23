@@ -7,16 +7,18 @@ import spray.http.{HttpEntity, HttpResponse}
 import spray.http.MediaTypes._
 import reactivemongo.bson.{BSONNull, BSONString, BSONObjectID, BSONDocument}
 import scala.concurrent.Future
-import org.techdelivery.property.entity.{RegistryRecord, MongoRegistryRecord}
+import org.techdelivery.property.entity.{MongoRegistryRecordFactory, RegistryRecord, MongoRegistryRecord}
 import scala.util.{Failure, Success}
 import reactivemongo.api.collections.default.BSONCollection
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import org.techdelivery.property.entity.RegistryRecordProtocol._
+import org.techdelivery.property.entity.RecordMapper._
 import org.techdelivery.property.spray.CoordinatesHelper._
 import akka.event.LoggingAdapter
 import spray.http.Uri.Query
+import reactivemongo.api.QueryOpts
 
 trait PropertyServiceRoute extends HttpService {
 
@@ -26,7 +28,10 @@ trait PropertyServiceRoute extends HttpService {
 
   protected def logger: LoggingAdapter
 
-  protected def runFilterFuture(filter: BSONDocument, pagination: Pagination = Pagination()): Future[List[MongoRegistryRecord]]
+  protected def runFilterFuture(filter: BSONDocument, pagination: Pagination = Pagination()): Future[List[MongoRegistryRecord]] = {
+    val opts = new QueryOpts(skipN = pagination.page * pagination.limit)
+    mongoCollection.find(filter).options(opts).cursor[MongoRegistryRecord].toList(pagination.limit)
+  }
 
   def propertyResource : Route = pathPrefix("property" / Segment) { id =>
     get {
@@ -67,6 +72,19 @@ trait PropertyServiceRoute extends HttpService {
         }
       }
 
+    } ~ put { ctx =>
+      try {
+            val record = MongoRegistryRecordFactory(id, extractRecord(ctx.request.entity))
+            val op = mongoCollection save (record)
+            op onComplete {
+              case Success(o) => ctx.complete( HttpResponse(status = 200, entity = record.toJson.toString) )
+              case Failure(t) => logger.info(t.getMessage, t); ctx.complete( HttpResponse(status = 503) )
+            }
+        } catch {
+        case e: Exception => {
+          logger.warning(e.getMessage); logger.debug(e.getMessage, e); ctx.complete(HttpResponse(status = 503))
+        }
+      }
     } ~ delete {
       val op = mongoCollection remove (BSONDocument("_id" -> BSONObjectID(id)))
       ctx => op onComplete {
@@ -90,6 +108,21 @@ trait PropertyServiceRoute extends HttpService {
         runFilterFuture(filter, pagination) onComplete {
           case Success(list) => ctx.complete( HttpResponse(status = 200, entity = HttpEntity(`application/json`, list.toJson.toString ) ) )
           case Failure(f) => ctx.complete( HttpResponse(status = 503, entity = f.getMessage) )
+        }
+      }
+    } ~
+    post { ctx =>
+      try {
+        val entity = ctx.request.entity
+        val record: RegistryRecord = extractRecord(entity)
+        val op = mongoCollection insert (extractRecord(entity))
+        op onComplete {
+          case Success(o) => ctx.complete( HttpResponse(status = 201, entity = record.toJson.toString) )
+          case Failure(t) => logger.info("Error", t); ctx.complete( HttpResponse(status = 503) )
+        }
+      } catch {
+        case e: Exception => {
+          logger.warning(e.getMessage); logger.debug(e.getMessage, e); ctx.complete( HttpResponse(status = 503) )
         }
       }
     }

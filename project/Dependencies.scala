@@ -1,8 +1,7 @@
 import sbt._
-
 object Dependencies {
 
-  val sprayVersion = "1.2-20130727"
+  val sprayVersion = "1.2-20130912"
   val akkaVersion = "2.2.0"
   
   val resolutionRepos = Seq(

@@ -1,6 +1,6 @@
 import sbt._
 import Keys._
-
+import xerial.sbt.Pack._
 
 object Build extends Build {
   import BuildSettings._
@@ -36,12 +36,22 @@ object Build extends Build {
     )
     .dependsOn(records_common)
 
+  lazy val records_rest_settings = exampleSettings ++ packSettings ++
+     Seq(
+       // Specify mappings from program name -> Main class (full package path)
+       packMain := Map("records-rest" -> "org.techdelivery.property.spray.PropertyRegisterApp"),
+       // Add custom settings here
+       // [Optional] JVM options of scripts (program name -> Seq(JVM option, ...))
+       packJvmOpts := Map("records-rest" -> Seq("-Xmx512m")),
+       // [Optional] Extra class paths to look when launching a program
+       packExtraClasspath := Map("records-rest" -> Seq("${PROG_HOME}/etc"))
+     )
+
   lazy val records_rest = Project("records-rest", file("records-rest"))
-    .settings(exampleSettings: _*)
+    .settings(records_rest_settings: _*)
     .settings(libraryDependencies ++=
       compile(akkaActor, sprayCan, sprayRouting, sprayJson, logging) ++
       test(specs2, scalatest) ++
       provided(akkaSlf4j, logback)
-    )
-    .dependsOn(records_common)
+  ).dependsOn(records_common)
 }
