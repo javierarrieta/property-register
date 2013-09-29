@@ -43,4 +43,5 @@ object Dependencies {
   val liftJson      = "net.liftweb"                             %%  "lift-json" 
   val rMongo        = "org.reactivemongo"                       %% "reactivemongo"                % "0.10-SNAPSHOT"     // % "2.5-M4"
   val time          = "org.scalaj"                              %  "scalaj-time_2.9.1"            % "0.6"
+  val scalaMetrics  = "nl.grons"                                %% "metrics-scala"                % "3.0.3"
 }

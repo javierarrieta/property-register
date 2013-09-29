@@ -50,7 +50,7 @@ object Build extends Build {
   lazy val records_rest = Project("records-rest", file("records-rest"))
     .settings(records_rest_settings: _*)
     .settings(libraryDependencies ++=
-      compile(akkaActor, sprayCan, sprayRouting, sprayJson, logging) ++
+      compile(akkaActor, sprayCan, sprayRouting, sprayJson, logging, scalaMetrics) ++
       test(specs2, scalatest) ++
       provided(akkaSlf4j, logback)
   ).dependsOn(records_common)

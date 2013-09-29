@@ -4,7 +4,6 @@ import scala.concurrent.ExecutionContext.Implicits._
 import reactivemongo.api.MongoDriver
 import org.techdelivery.property.settings.configuration._
 import reactivemongo.api.collections.default.BSONCollection
-import akka.actor.PoisonPill
 
 object propertyMongoDB {
   private implicit val mongo = new MongoDriver
