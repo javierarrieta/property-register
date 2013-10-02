@@ -12,3 +12,5 @@ addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "2.3.0")
 addSbtPlugin("me.lessis" % "ls-sbt" % "0.1.2")
 
 addSbtPlugin("org.xerial.sbt" % "sbt-pack" % "0.3.1")
+
+addSbtPlugin("com.typesafe.sbt" % "sbt-atmos" % "0.3.1")

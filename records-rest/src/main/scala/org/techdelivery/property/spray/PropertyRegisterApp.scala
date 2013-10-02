@@ -28,7 +28,7 @@ object PropertyRegisterApp extends App with Logging {
   sys.addShutdownHook(system.shutdown())
   private implicit val _ = system.dispatcher
 
-  val property_resource = system.actorOf(Props( new PropertyResource(propertyMongoDB.propertyCollection)))
+  val property_resource = system.actorOf(Props( new InstrumentedPropertyResource(propertyMongoDB.propertyCollection)))
   // create a new HttpServer using our handler and tell it where to bind to
   IO(Http)(system) ! Bind(property_resource, interface = http_iface, port = http_port)
 }

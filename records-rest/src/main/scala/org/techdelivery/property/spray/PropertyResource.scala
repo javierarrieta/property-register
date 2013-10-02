@@ -2,16 +2,20 @@ package org.techdelivery.property.spray
 
 import akka.actor.{ActorLogging, Actor}
 import reactivemongo.api.collections.default.BSONCollection
+import nl.grons.metrics.scala.ReceiveTimerActor
+import org.techdelivery.property.spray.metrics.Instrumented
 
-class PropertyResource
-(collection: BSONCollection) extends Actor with PropertyServiceRoute with ActorLogging {
+trait PropertyResource extends Actor with PropertyServiceRoute with ActorLogging {
 
   def actorRefFactory = context
 
-  def receive = runRoute(route)
+  override def receive = runRoute(route)
 
   def logger = log
 
-  protected def mongoCollection = collection
+}
 
+class InstrumentedPropertyResource(collection: BSONCollection)  extends PropertyResource with ReceiveTimerActor with Instrumented {
+
+  protected def mongoCollection = collection
 }
